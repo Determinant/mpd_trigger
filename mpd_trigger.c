@@ -198,7 +198,6 @@ void main_loop() {
                 artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
                 album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
                 track = mpd_song_get_tag(song, MPD_TAG_TRACK, 0);
-                /* printf("%s\n", filter("\\{title\\}artist:{artist}\nalbum:{album}\ntrack:{track}\nstate:{state}\n{elapsed_time}/{total_time}")); */
                 trigger(filter(trigger_command));
                 mpd_song_free(song);
             }
