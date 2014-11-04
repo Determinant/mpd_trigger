@@ -18,7 +18,7 @@ project nevertheless). Being different from it, this project tends to be
 lightweight and simple but as extensible as it can, but in the end, should be
 simple. After all, a simple task deserves a simple solution. Now the code is
 written in C in a single file and highly portable. It uses "patterns" to
-generate a command once MPD state is being changed and pipe it into a
+generate a command once MPD state is being changed and pipes it into a
 pre-selected shell. During the execution, it consumes few resources and imposes
 little overhead.
 
@@ -53,7 +53,10 @@ the following command:
 
     ./mpd_trigger -e 'terminal-notifier -title "{title}: {state} ({elapsed_pct}%)" -subtitle "{artist}" -message "{album} @ {track?{track}:unknown track}" -sender com.apple.iTunes'
 
+.. image:: https://raw.github.com/Lokaltog/powerline/master/screenshot.png
+
 Finally, it is worth mentioning that patterns can be nested, for example a part
-of the pattern in last example ``{track?{track}:unkown track}`` makes use of such technique.
+of the pattern in last example ``{track?{track}:unkown track}`` makes use of
+such technique. Have fun! :)
 
 .. _mpd-hiss: https://github.com/ahihi/mpd-hiss
