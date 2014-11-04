@@ -21,9 +21,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <getopt.h>
 
 #include <mpd/idle.h>
 #include <mpd/tag.h>

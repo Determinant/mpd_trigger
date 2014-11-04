@@ -25,8 +25,8 @@ little overhead.
 How to Use?
 -----------
 First, compile it by invoking ``make``. The only executable file is
-``mpd_trigger``. You could run ``./mpd_trigger -h`` to read the help. A typical
-example is as follow (execute in bash):
+``mpd_trigger``. You could run ``./mpd_trigger -h`` to read the help
+information. A typical example is as follow (executed in bash):
 
 :: 
 
@@ -37,7 +37,7 @@ executing that ``echo`` command.
 
 You may have noticed something like ``{title}`` which is actually a pattern
 representing the title of the song is to be filed in that place.
-``mpd_trigger`` currently support two kinds of patterns:
+``mpd_trigger`` currently supports two kinds of patterns:
 
 - Information patterns: ``{title}``, ``{artist}``, ``{album}``, ``{track}``,
   ``{state}``, ``{elapsed_time}``, ``total_time``, ``{elapsed_pct}``
@@ -60,3 +60,11 @@ of the pattern in last example ``{track?{track}:unkown track}`` makes use of
 such technique. Have fun! :)
 
 .. _mpd-hiss: https://github.com/ahihi/mpd-hiss
+
+Dependencies
+------------
+
+- The canonical mpd library: libmpdclient (on which famous mpd clients such as
+  mpc and ncmpcppp also depends)
+- Some basic POSIX syscalls (ubiquitous on current unix-like systems)
+- Nothing else.
