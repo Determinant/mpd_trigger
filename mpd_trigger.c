@@ -16,10 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mpd/idle.h>
-#include <mpd/tag.h>
-#include <mpd/status.h>
-#include <mpd/client.h>
 #include <stdio.h>
 #include <assert.h>
 #include <unistd.h>
@@ -27,6 +23,12 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <getopt.h>
+
+#include <mpd/idle.h>
+#include <mpd/tag.h>
+#include <mpd/status.h>
+#include <mpd/client.h>
 
 struct mpd_connection *conn;
 typedef struct mpd_song mpd_song_t;
@@ -37,8 +39,9 @@ typedef struct mpd_status mpd_status_t;
 #define MAX_INFO_BUFF 256
 #define MAX_OUTPUT_BUFF 2048
 
-const char *host = "192.168.248.130";
+const char *host = "localhost";
 unsigned int port = 6600;
+unsigned int reconnect_time = 3;
 const char *state_name[4] = {"unknown", "stopped", "now playing", "paused"};
 const char *shell = "bash";
 const char *trigger_command = "terminal-notifier -title \"{title}: {state} ({elapsed_pct}%)\" "
@@ -79,6 +82,7 @@ void hash_table_destroy(HashTable *ht) {
             free(e);
         }
     }
+    free(ht);
 }
 
 void hash_table_register(HashTable *ht, const char *name, const char **content_ref) {
@@ -115,7 +119,7 @@ void handle_error(struct mpd_connection *conn) {
         if (ptr >= buff + limit) \
         { \
             fprintf(stderr, "[main] string is too long to be stored"); \
-            exit(0); \
+            exit(1); \
         } \
     } while (0)
 
@@ -182,7 +186,7 @@ const char *filter(const char *input) {
                 if (pptr >= pos)
                 {
                     while (bptr != *pptr) bptr--;
-                    *optr = '\0'; /* mark the end of the token */
+                    *optr = '\0';
                     content = substitution(bptr + 1, &csize);
                     memmove(bptr, content, csize);
                     optr = bptr + csize;
@@ -274,8 +278,30 @@ void main_loop() {
     }
 }
 
-int main() {
-    int i;
+struct option long_options[] = {
+    {"port", required_argument, NULL, 'p'},
+    {"execute", required_argument, NULL, 'e'},
+    {"help", no_argument, NULL, 'h'},
+    {"shell", required_argument, NULL, 's'},
+    {"retry", required_argument, NULL, 'r'},
+    {0, 0, 0, 0}
+};
+
+
+int str_to_int(char *repr, int *flag) {
+    char *endptr;
+    int val = (int)strtol(repr, &endptr, 10);
+    if (endptr == repr || endptr != repr + strlen(repr))
+    {
+        *flag = 0;
+        return 0;
+    }
+    *flag = 1;
+    return val;
+}
+
+int main(int argc, char **argv) {
+    int opt, ind = 0;
     dict = hash_table_create();
     hash_table_register(dict, "title", &title);
     hash_table_register(dict, "artist", &artist);
@@ -285,12 +311,50 @@ int main() {
     hash_table_register(dict, "elapsed_time", &elapsed_time);
     hash_table_register(dict, "total_time", &total_time);
     hash_table_register(dict, "elapsed_pct", &elapsed_pct);
+    while ((opt = getopt_long(argc, argv, "p:e:s:r:h", long_options, &ind)) != -1)
+    {
+        int flag;
+        switch (opt)
+        {
+            case 'p':
+                port = str_to_int(optarg, &flag);
+                if (!flag)
+                    return fprintf(stderr, "Port number should be an integer.\n"), 1;
+                break;
+            case 'r':
+                reconnect_time = str_to_int(optarg, &flag);
+                if (!flag)
+                    return fprintf(stderr, "reconnect time should be an integer.\n"), 1;
+                break;
+            case 'e':
+                trigger_command = optarg;
+                break;
+            case 's':
+                shell = optarg;
+                break;
+            case 'h':
+                fprintf(stderr,
+                       "mpd_trigger: Execute whatever you want when MPD "
+                       "(Music Player Daemon) changes its state \n\n"
+                       "Usage: mpd_trigger [OPTION]... [HOST]\n\n"
+                       "  -p, --port\t\tspecify a port number (6600 by default)\n"
+                       "  -e, --execute\t\tspecify the command to trigger "
+                       "(special patterns are supported: {title} {track} ... {str1?str2:str3})\n"
+                       "  -s, --shell\t\tspecify shell used to interpret the command\n"
+                       "  -r, --retry\t\tspecify reconnect time (in seconds)\n"
+                       "  -h, --help\t\tshow this info\n"
+                       "\nAuthor: Ted Yin <ted.sybil@gmail.com>\n");
+                return 0;
+        }
+    }
+    if (optind < argc) host = argv[optind];
     for (;;)
     {
         fprintf(stderr, "[mpd] trying to connect %s:%d\n", host, port);
         conn = mpd_connection_new(host, port, 0);
         main_loop();
         fprintf(stderr, "[mpd] reconnecting\n");
-        sleep(2);
+        sleep(reconnect_time);
     }
+    return 0;
 }
