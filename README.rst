@@ -1,8 +1,10 @@
-mpd_trigger: Execute whatever you want when MPD (Music Player Daemon) changes its state
-=======================================================================================
+mpd_trigger
+===========
 
 :Author: Ted Yin
 :Address: ted.sybil@gmail.com
+
+Execute whatever you want when MPD (Music Player Daemon) changes its state
 
 What Is This?
 -------------
