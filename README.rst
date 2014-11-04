@@ -13,7 +13,7 @@ to achieve this little but convenient functionality. Although there is
 mpd-hiss_, it has quite a number of dependencies and is written in Python with
 several separated files. I think such a simply little desire should not be as
 complicated as this. Even though I love programming in Python, that project
-still need to polished to be flexible and easy to deploy (But it is a good
+may still need to polished to be flexible and easy to deploy (But it is a good
 project anyway). Being different from it, this project tends to lightweight and
 simple but as extensible as it can, but in the end, should be simple. After
 all, a simple task deserves a simple solution. Now the code is written in C in
