@@ -53,7 +53,7 @@ the following command:
 
     ./mpd_trigger -e 'terminal-notifier -title "{title}: {state} ({elapsed_pct}%)" -subtitle "{artist}" -message "{album} @ {track?{track}:unknown track}" -sender com.apple.iTunes'
 
-.. image:: https://raw.github.com/Lokaltog/powerline/master/screenshot.png
+.. image:: https://raw.githubusercontent.com/Determinant/mpd_trigger/master/screenshot.png
 
 Finally, it is worth mentioning that patterns can be nested, for example a part
 of the pattern in last example ``{track?{track}:unkown track}`` makes use of
