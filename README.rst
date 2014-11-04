@@ -14,7 +14,7 @@ mpd-hiss_, it has quite a number of dependencies and is written in Python with
 several separated files. I think such a simply little desire should not be as
 complicated as this. Even though I love programming in Python, that project may
 still need to polished to be flexible and easy to deploy (but it is a good
-project nevertheless). Being different from it, this project tends to
+project nevertheless). Being different from it, this project tends to be
 lightweight and simple but as extensible as it can, but in the end, should be
 simple. After all, a simple task deserves a simple solution. Now the code is
 written in C in a single file and highly portable. It uses "patterns" to
