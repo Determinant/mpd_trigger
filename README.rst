@@ -77,4 +77,6 @@ Dependencies
 - The canonical mpd library: ``libmpdclient`` (on which famous mpd clients such as
   mpc and ncmpcppp also depend)
 - Some basic POSIX syscalls (ubiquitous on current unix-like systems)
+- For Mac OS X users, they may want to install ``terminal-notifier`` if they'd
+  like to, but this is not mandatory since the triggered command is up to you.
 - Nothing else.
