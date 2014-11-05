@@ -23,8 +23,8 @@ const char *host = "192.168.248.130";
 unsigned int port = 6600;
 const char *state_name[4] = {"unknown", "stopped", "now playing", "paused"};
 const char *shell = "bash";
-const char *trigger_command = "terminal-notifier -title '{title}: {state} ({elapsed_pct}%)' "
-                            "-subtitle '{artist}' -message $'{album}\\\\n{track}' -sender com.apple.iTunes";
+const char *trigger_command = "terminal-notifier -title \"{title}: {state} ({elapsed_pct}%)\" "
+                            "-subtitle \"{artist}\" -message \"{album} @ {track?{track}:unknown track}\" -sender com.apple.iTunes";
 
 typedef const char *(*Hook_t)(mpd_status_t status, mpd_song_t song);
 typedef struct Entry {
@@ -92,13 +92,50 @@ void handle_error(struct mpd_connection *conn) {
     mpd_connection_free(conn);
 }
 
+const char *substitution(const char *exp, size_t *size) {
+    static char output_buff[MAX_OUTPUT_BUFF];
+    const char *content;
+    char *optr = output_buff;
+    char *cond_pos = NULL, *sep_pos = NULL;
+    *size = 0;
+    while (*exp)
+    {
+        if (*exp == '?') cond_pos = optr;
+        else if (*exp == ':') sep_pos = optr;
+        *optr++ = *exp++; 
+        (*size)++;
+    }
+    *optr = '\0';
+    if (cond_pos && sep_pos) /* a substitution */
+    {
+        char *start;
+        *cond_pos = '\0';
+        *sep_pos = '\0';
+        content = hash_table_lookup(dict, output_buff);
+        start = (content && *content) ? cond_pos + 1: sep_pos + 1;
+        *size = strlen(start);
+        memmove(output_buff, start, *size);
+        output_buff[*size] = '\0';    
+    }
+    else
+    {
+        if ((content = hash_table_lookup(dict, output_buff)))
+        {
+            *size = strlen(content);
+            memmove(output_buff, content, *size);
+            output_buff[*size] = '\0';
+        }
+    }
+    return output_buff;
+}
+
 const char *filter(const char *input) {
     static char output_buff[MAX_OUTPUT_BUFF]; 
-    static char token_buff[MAX_INFO_BUFF];
-    char *optr = output_buff, *tptr = token_buff;
+    static char *pos[MAX_OUTPUT_BUFF];
+    char *optr = output_buff;
+    char **pptr = pos - 1;
     enum {
         ESCAPE,
-        IN_TOKEN,
         NORMAL
     } state = NORMAL;
     while (*input)
@@ -107,28 +144,29 @@ const char *filter(const char *input) {
         {
             if (*input == '\\')
                 state = ESCAPE;
-            else if (*input == '{')
-                state = IN_TOKEN;
-            else
-                *optr++ = *input;
-        }
-        else if (state == IN_TOKEN)
-        {
-            if (*input == '}')
+            else if (*input == '}')
             {
                 size_t csize;
                 const char *content;
-                *tptr = '\0'; /* mark the end of the token */
-                if ((content = hash_table_lookup(dict, token_buff)))
+                char *bptr = optr - 1;
+                if (pptr >= pos)
                 {
-                    csize = strlen(content);
-                    memmove(optr, content, csize);
-                    optr += csize;
+                    while (bptr != *pptr) bptr--;
+                    *optr = '\0'; /* mark the end of the token */
+                    content = substitution(bptr + 1, &csize);
+                    memmove(bptr, content, csize);
+                    optr = bptr + csize;
+                    pptr--;
                 }
-                tptr = token_buff;
+                else *optr++ = '}';
                 state = NORMAL;
             }
-            else *tptr++ = *input;
+            else
+            {
+                if (*input == '{')
+                    *(++pptr) = optr;
+                *optr++ = *input;
+            }
         }
         else
         {
