@@ -1,3 +1,21 @@
+/**
+ *  mpd_trigger: Execute whatever you want when MPD (Music Player Daemon) changes its state
+ *  Copyright (C) 2014 Ted Yin
+
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <mpd/idle.h>
 #include <mpd/tag.h>
 #include <mpd/status.h>
@@ -88,9 +106,18 @@ const char *title, *artist, *album, *track, *state,
 HashTable *dict;
 
 void handle_error(struct mpd_connection *conn) {
-    fprintf(stderr, "%s\n", mpd_connection_get_error_message(conn));
+    fprintf(stderr, "[mpd] error: %s\n", mpd_connection_get_error_message(conn));
     mpd_connection_free(conn);
 }
+
+#define CHECK_OVERFLOW(ptr, buff, limit) \
+    do { \
+        if (ptr >= buff + limit) \
+        { \
+            fprintf(stderr, "[main] string is too long to be stored"); \
+            exit(0); \
+        } \
+    } while (0)
 
 const char *substitution(const char *exp, size_t *size) {
     static char output_buff[MAX_OUTPUT_BUFF];
@@ -100,11 +127,13 @@ const char *substitution(const char *exp, size_t *size) {
     *size = 0;
     while (*exp)
     {
+        CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
         if (*exp == '?') cond_pos = optr;
         else if (*exp == ':') sep_pos = optr;
         *optr++ = *exp++; 
         (*size)++;
     }
+    CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
     *optr = '\0';
     if (cond_pos && sep_pos) /* a substitution */
     {
@@ -140,6 +169,7 @@ const char *filter(const char *input) {
     } state = NORMAL;
     while (*input)
     {
+        CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
         if (state == NORMAL)
         {
             if (*input == '\\')
@@ -175,6 +205,7 @@ const char *filter(const char *input) {
         }
         input++;
     }
+    CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
     *optr = '\0';
     return output_buff;
 }
@@ -183,10 +214,10 @@ void trigger(const char *filtered_cmd) {
     pid_t pid;
     int fd[2];
     pipe(fd);
-    fprintf(stderr, "executing: %s\n", filtered_cmd);
+    fprintf(stderr, "[trigger] executing command: %s\n", filtered_cmd);
     if ((pid = fork()) == -1)
     {
-        fprintf(stderr, "failed to fork\n");
+        fprintf(stderr, "[trigger] failed to fork\n");
         return;
     }
     else if (!pid)
@@ -215,7 +246,6 @@ void main_loop() {
         mpd_send_idle_mask(conn, MPD_IDLE_PLAYER);
         idle_info = mpd_recv_idle(conn, 1);
         if (!idle_info) MAINLOOP_ERROR;
-        fprintf(stderr, "new event: %s(%d)\n", mpd_idle_name(idle_info), idle_info);
         if (idle_info == MPD_IDLE_PLAYER)
         {
             int et, tt;
@@ -223,11 +253,12 @@ void main_loop() {
             status = mpd_recv_status(conn);
             if (!status) MAINLOOP_ERROR;
             state = state_name[mpd_status_get_state(status)];
+            fprintf(stderr, "[mpd] new event: %s\n", state);
             et = mpd_status_get_elapsed_time(status);
             tt = mpd_status_get_total_time(status);
-            sprintf(etime_buff, "%i", et);
-            sprintf(ttime_buff, "%i", tt);
-            sprintf(epct_buff, "%d", tt ? et * 100 / tt : 0);
+            snprintf(etime_buff, sizeof(etime_buff), "%i", et);
+            snprintf(ttime_buff, sizeof(ttime_buff), "%i", tt);
+            snprintf(epct_buff, sizeof(epct_buff), "%d", tt ? et * 100 / tt : 0);
             mpd_status_free(status);
             mpd_send_current_song(conn);
             while ((song = mpd_recv_song(conn)) != NULL)
@@ -256,10 +287,10 @@ int main() {
     hash_table_register(dict, "elapsed_pct", &elapsed_pct);
     for (;;)
     {
-        fprintf(stderr, "trying to connect %s:%d\n", host, port);
+        fprintf(stderr, "[mpd] trying to connect %s:%d\n", host, port);
         conn = mpd_connection_new(host, port, 0);
         main_loop();
-        fprintf(stderr, "reconnecting\n");
+        fprintf(stderr, "[mpd] reconnecting\n");
         sleep(2);
     }
 }
