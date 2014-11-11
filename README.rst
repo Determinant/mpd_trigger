@@ -55,7 +55,7 @@ the following command:
 
 .. image:: https://raw.githubusercontent.com/Determinant/mpd_trigger/master/screenshot.png
 
-If you have idea about how to run this program as a user daemon, try to copy
+If you have no idea about how to run this program as a user daemon, try to copy
 the accompanied file ``com.ted.mpd_trigger.plist`` (*you should modify the path
 to the correct location of the compiled ``mpd_trigger`` binary* and may adjust
 parameters) to ``path_to_your_home/Library/LaunchAgents`` and then execute the
