@@ -56,14 +56,15 @@ the following command:
 .. image:: https://raw.githubusercontent.com/Determinant/mpd_trigger/master/screenshot.png
 
 If you have idea about how to run this program as a user daemon, try to copy
-the accompanied file ``com.ted.mpd_trigger.plist`` (you may modify the file to
-have correct parameters for mpd_trigger) to
-``path_to_your_home/Library/LaunchAgents`` and then execute the following commands:
+the accompanied file ``com.ted.mpd_trigger.plist`` (*you should modify the path
+to the correct location of the compiled ``mpd_trigger`` binary* and may adjust
+parameters) to ``path_to_your_home/Library/LaunchAgents`` and then execute the
+following commands:
 
 ::
 
     cd path_to_your_home/Library/LaunchAgents
-    launchd load com.ted.mpd_trigger.plist
+    launchctl load com.ted.mpd_trigger.plist
 
 Finally, it is worth mentioning that patterns can be nested, for example a part
 of the pattern in last example ``{track?{track}:unkown track}`` makes use of
