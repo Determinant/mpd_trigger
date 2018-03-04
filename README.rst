@@ -28,7 +28,7 @@ First, compile it by invoking ``make``. The only executable file is
 ``mpd_trigger``. You could run ``./mpd_trigger -h`` to read the help
 information. A typical example is as follow (executed in bash):
 
-:: 
+::
 
     ./mpd_trigger 192.168.248.130 -p 6600 -e "echo 'Hey, {title} is {state}!'"
 

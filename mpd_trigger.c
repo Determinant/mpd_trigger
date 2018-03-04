@@ -41,7 +41,7 @@ typedef struct mpd_status mpd_status_t;
 
 const char *host = "localhost";
 unsigned int port = 6600;
-unsigned int reconnect_time = 3;
+unsigned int reconnect_time = 10;
 const char *state_name[4] = {"unknown", "stopped", "now playing", "paused"};
 const char *shell = "bash";
 const char *trigger_command = "terminal-notifier -title \"{title}: {state} ({elapsed_pct}%)\" "
@@ -60,7 +60,7 @@ typedef struct {
 
 HashTable *hash_table_create() {
     HashTable *ht = (HashTable *)malloc(sizeof(HashTable));
-    memset(ht->head, sizeof(ht->head), 0);
+    memset(ht->head, 0, sizeof(ht->head));
     return ht;
 }
 
@@ -134,7 +134,7 @@ const char *substitution(const char *exp, size_t *size) {
         CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
         if (*exp == '?') cond_pos = optr;
         else if (*exp == ':') sep_pos = optr;
-        *optr++ = *exp++; 
+        *optr++ = *exp++;
         (*size)++;
     }
     CHECK_OVERFLOW(optr, output_buff, MAX_OUTPUT_BUFF);
@@ -148,7 +148,7 @@ const char *substitution(const char *exp, size_t *size) {
         start = (content && *content) ? cond_pos + 1: sep_pos + 1;
         *size = strlen(start);
         memmove(output_buff, start, *size);
-        output_buff[*size] = '\0';    
+        output_buff[*size] = '\0';
     }
     else
     {
@@ -163,7 +163,7 @@ const char *substitution(const char *exp, size_t *size) {
 }
 
 const char *filter(const char *input) {
-    static char output_buff[MAX_OUTPUT_BUFF]; 
+    static char output_buff[MAX_OUTPUT_BUFF];
     static char *pos[MAX_OUTPUT_BUFF];
     char *optr = output_buff;
     char **pptr = pos - 1;
@@ -253,7 +253,7 @@ void main_loop() {
         if (idle_info == MPD_IDLE_PLAYER)
         {
             int et, tt;
-            mpd_send_status(conn); 
+            mpd_send_status(conn);
             status = mpd_recv_status(conn);
             if (!status) MAINLOOP_ERROR;
             state = state_name[mpd_status_get_state(status)];

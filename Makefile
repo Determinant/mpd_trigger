@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: all clean
 all: mpd_trigger
 mpd_trigger: mpd_trigger.o
 	gcc -o $@ $< -lmpdclient
