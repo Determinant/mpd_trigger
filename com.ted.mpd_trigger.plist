@@ -8,7 +8,7 @@
 	<array>
         <string>/Users/ymf/Downloads/mpd_trigger/mpd_trigger</string>
         <string>-e</string>
-        <string>/usr/local/bin/terminal-notifier -title "{title}: {state} ({elapsed_pct}%)" -subtitle "{artist}" -message "{album} @ {track?{track}:unknown track}" -sender com.apple.iTunes</string>
+        <string>/usr/local/bin/terminal-notifier -title $'{title}: {state} ({elapsed_pct}%)' -subtitle $'{artist}' -message $'{album} @ {track?{track}:unknown track}' -sender com.apple.iTunes</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

@@ -3,8 +3,7 @@ Description=MPD Trigger
 
 [Service]
 Type=simple
-SysLogLevel=err
-ExecStart=/home/ymf/repo/mpd_trigger/mpd_trigger -e "notify-send $\'{title}: {state} ({elapsed_pct}%)\\\n{artist}\' \"{album} @ {track?{track}:unknown track}\" -i /usr/share/icons/breeze/mimetypes/32/audio-mp3.svg"
+ExecStart=/home/ymf/repo/mpd_trigger/mpd_trigger -e "notify-send $\'{title}: {state} ({elapsed_pct}%)\\\\n{artist}\' $\'{album} @ {track?{track}:unknown track}\' -i /usr/share/icons/breeze/mimetypes/32/audio-mp3.svg"
 KillSignal=SIGTERM
 
 [Install]

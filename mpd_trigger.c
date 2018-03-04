@@ -50,7 +50,7 @@ const char *trigger_command = "terminal-notifier -title \"{title}: {state} ({ela
 typedef const char *(*Hook_t)(mpd_status_t status, mpd_song_t song);
 typedef struct Entry {
     const char *name;
-    const char **content_ref;
+    const char * const *content_ref;
     struct Entry *next;
 } Entry;
 
@@ -85,7 +85,7 @@ void hash_table_destroy(HashTable *ht) {
     free(ht);
 }
 
-void hash_table_register(HashTable *ht, const char *name, const char **content_ref) {
+void hash_table_register(HashTable *ht, const char *name, const char * const *content_ref) {
     unsigned int hv = hash_table_hash_func(name);
     Entry *e = (Entry *)malloc(sizeof(Entry));
     e->name = name;
@@ -104,8 +104,9 @@ const char *hash_table_lookup(HashTable *ht, const char *name) {
 }
 
 char etime_buff[MAX_INFO_BUFF], ttime_buff[MAX_INFO_BUFF], epct_buff[MAX_INFO_BUFF];
-const char *title, *artist, *album, *track, *state,
-      *elapsed_time = etime_buff, *total_time = ttime_buff, *elapsed_pct = epct_buff;
+char *title, *artist, *album, *track;
+const char *state;
+const char *elapsed_time = etime_buff, *total_time = ttime_buff, *elapsed_pct = epct_buff;
 
 HashTable *dict;
 
@@ -237,6 +238,14 @@ void trigger(const char *filtered_cmd) {
     waitpid(pid, NULL, 0);
 }
 
+char *new_hex_escaped(const char *raw) {
+    char *hex = (char *)malloc(strlen(raw) * 4 + 1);
+    char *p = hex;
+    while (*raw)
+        p += sprintf(p, "\\x%02x", (unsigned char)*raw++);
+    return hex;
+}
+
 void main_loop() {
     for (;;)
     {
@@ -267,11 +276,15 @@ void main_loop() {
             mpd_send_current_song(conn);
             while ((song = mpd_recv_song(conn)) != NULL)
             {
-                title = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
-                artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
-                album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
-                track = mpd_song_get_tag(song, MPD_TAG_TRACK, 0);
+                title = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_TITLE, 0));
+                artist = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_ARTIST, 0));
+                album = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_ALBUM, 0));
+                track = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_TRACK, 0));
                 trigger(filter(trigger_command));
+                free(title);
+                free(artist);
+                free(album);
+                free(track);
                 mpd_song_free(song);
             }
         }
@@ -303,11 +316,11 @@ int str_to_int(char *repr, int *flag) {
 int main(int argc, char **argv) {
     int opt, ind = 0;
     dict = hash_table_create();
-    hash_table_register(dict, "title", &title);
-    hash_table_register(dict, "artist", &artist);
-    hash_table_register(dict, "album", &album);
-    hash_table_register(dict, "track", &track);
-    hash_table_register(dict, "state", &state);
+    hash_table_register(dict, "title", (const char * const *)&title);
+    hash_table_register(dict, "artist", (const char * const *)&artist);
+    hash_table_register(dict, "album", (const char * const *)&album);
+    hash_table_register(dict, "track", (const char * const *)&track);
+    hash_table_register(dict, "state", (const char * const *)&state);
     hash_table_register(dict, "elapsed_time", &elapsed_time);
     hash_table_register(dict, "total_time", &total_time);
     hash_table_register(dict, "elapsed_pct", &elapsed_pct);
@@ -350,6 +363,7 @@ int main(int argc, char **argv) {
     if (optind < argc) host = argv[optind];
     for (;;)
     {
+        fprintf(stderr, "[mpd] started with pattern: %s\n", trigger_command);
         fprintf(stderr, "[mpd] trying to connect %s:%d\n", host, port);
         conn = mpd_connection_new(host, port, 0);
         main_loop();
