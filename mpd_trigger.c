@@ -239,6 +239,7 @@ void trigger(const char *filtered_cmd) {
 }
 
 char *new_hex_escaped(const char *raw) {
+    if (!raw) return NULL;
     char *hex = (char *)malloc(strlen(raw) * 4 + 1);
     char *p = hex;
     while (*raw)
@@ -281,10 +282,10 @@ void main_loop() {
                 album = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_ALBUM, 0));
                 track = new_hex_escaped(mpd_song_get_tag(song, MPD_TAG_TRACK, 0));
                 trigger(filter(trigger_command));
-                free(title);
-                free(artist);
-                free(album);
-                free(track);
+                if (title) free(title);
+                if (artist) free(artist);
+                if (album) free(album);
+                if (track) free(track);
                 mpd_song_free(song);
             }
         }
