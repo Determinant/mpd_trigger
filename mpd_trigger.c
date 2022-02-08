@@ -262,7 +262,7 @@ void main_loop() {
         if (!idle_info) MAINLOOP_ERROR;
         if (idle_info == MPD_IDLE_PLAYER)
         {
-            int et, tt;
+            int et, tt, c = 0;
             mpd_send_status(conn);
             status = mpd_recv_status(conn);
             if (!status) MAINLOOP_ERROR;
@@ -287,7 +287,9 @@ void main_loop() {
                 if (album) free(album);
                 if (track) free(track);
                 mpd_song_free(song);
+                c = 1;
             }
+            if (!c) trigger(filter(trigger_command));
         }
     }
 }
